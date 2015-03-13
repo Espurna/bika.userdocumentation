@@ -46,6 +46,11 @@ html:
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
+htmllang:
+	$(SPHINXBUILD) -b html -a $(ALLSPHINXOPTS) $(BUILDDIR)/html/$(LANG)
+	@echo
+	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
+
 dirhtml:
 	$(SPHINXBUILD) -b dirhtml $(ALLSPHINXOPTS) $(BUILDDIR)/dirhtml
 	@echo
@@ -151,3 +156,30 @@ doctest:
 	$(SPHINXBUILD) -b doctest $(ALLSPHINXOPTS) $(BUILDDIR)/doctest
 	@echo "Testing of doctests in the sources finished, look at the " \
 	      "results in $(BUILDDIR)/doctest/output.txt."
+
+initlocales:
+#	Generates .pot files and the doctree
+	make gettext 
+	cd source && sphinx-intl update -p ../../userdocumentation/locale -l es -l en
+#	-p defines the .pot folder source. In our case is ../userdocumentation. 
+#	-d The locale_dir (also defined in conf.py) defines the target folder to locate the .po files. These files should live in a git folder because are the translated ones. In our case the folder is found in source/locale
+
+#	It generates the .mo files from po files inside source/locale
+	cd source && sphinx-intl build 
+# 	make translated document
+	make -e SPHINXOPTS="-D language='es'" htmllang LANG=es
+	make -e SPHINXOPTS="-D language='en'" htmllang LANG=en
+
+updatelocales:
+# 	rm doctree, otherwise html is not changed...
+	cd ../userdocumentation && rm -r doctrees
+# 	It generates the .mo files from po files inside source/locale.
+	cd source && sphinx-intl build 
+#	make translated document.
+	make -e SPHINXOPTS="-D language='es'" htmllang LANG=es
+	make -e SPHINXOPTS="-D language='en'" htmllang LANG=en
+
+updatetext:
+#	It's used to udate .pot files by .rst changes.
+	make gettext
+	cd source && sphinx-intl update -p ../../userdocumentation/locale -l es -l en
